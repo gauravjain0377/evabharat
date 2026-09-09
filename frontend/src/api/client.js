@@ -1,4 +1,10 @@
-const BASE = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+const BASE =
+  import.meta.env.VITE_API_URL ||
+  (typeof window !== 'undefined' && window.location.origin
+    ? window.location.port === '5173'
+      ? 'http://localhost:8080'
+      : window.location.origin
+    : 'http://localhost:8080');
 
 export const WS_URL = BASE.replace(/^http/, 'ws') + '/ws';
 
