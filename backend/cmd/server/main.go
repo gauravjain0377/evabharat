@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -75,6 +76,23 @@ func main() {
 		r.Get("/sync/state", syncH.GetState)
 		r.Post("/sync/trigger", syncH.Trigger)
 	})
+
+	// Optional static files for production (serves built React SPA if present)
+	staticDir := envOrDefault("STATIC_DIR", "./public")
+	if info, err := os.Stat(staticDir); err == nil && info.IsDir() {
+		fs := http.FileServer(http.Dir(staticDir))
+		r.Get("/*", func(w http.ResponseWriter, r *http.Request) {
+			cleanPath := filepath.Clean(r.URL.Path)
+			target := filepath.Join(staticDir, cleanPath)
+			if stat, err := os.Stat(target); err != nil || stat.IsDir() {
+				// Fallback to index.html for client-side routing
+				http.ServeFile(w, r, filepath.Join(staticDir, "index.html"))
+				return
+			}
+			fs.ServeHTTP(w, r)
+		})
+		log.Printf("serving static frontend from: %s\n", staticDir)
+	}
 
 	srv := &http.Server{
 		Addr:         ":" + port,

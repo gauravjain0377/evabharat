@@ -59,6 +59,26 @@ A high-performance full-stack application for multi-display broadcast and digita
 
 ---
 
+## Assumptions & Architectural Tradeoffs
+
+1. **Cycle Anchor Epoch**:
+   - The 5-hour (18,000s) playback cycle is anchored to `00:00:00 UTC` of the current day.
+   - *Rationale*: Guarantees all client tabs and browser sessions display identical frames at any millisecond without requiring heavy server polling or clock sync protocols.
+2. **Looping Within 5-Hour Cycle vs Default Blackout**:
+   - Per requirement: *"Blank is only a configured playlist item when included; the rest of the cycle should not become blank playback by default"*.
+   - *Decision*: When the cumulative playlist duration is less than 5 hours, the sequence restarts from the beginning immediately upon reaching the end. Blank states only render when an explicit `blank` media item is part of the configured playlist.
+3. **Sync Override Priority**:
+   - When a global sync is active, it preempts normal playback in all display windows immediately.
+   - Normal timeline advancement continues in the background so that upon sync expiration, windows resume at their scheduled positions without timeline drift.
+4. **Pure Go SQLite Driver**:
+   - Used `modernc.org/sqlite` instead of `mattn/go-sqlite3`.
+   - *Tradeoff*: Slightly higher CPU overhead during heavy queries in exchange for **zero CGO dependency**, enabling seamless cross-compilation and building ultra-small Alpine Linux Docker containers without gcc toolchains.
+5. **Single-Container Fullstack Deployment**:
+   - The Go HTTP router automatically serves the built React frontend (`STATIC_DIR`) when present.
+   - *Advantage*: Entire application (REST API, WebSockets, persistent SQLite DB, and React SPA) can deploy as a single container on Render, Railway, or Fly.io without CORS issues or needing two separate servers.
+
+---
+
 ## Tech Stack
 
 - **Backend**: Golang 1.23+ (`chi/v5` router, `modernc.org/sqlite` pure-Go driver, `gorilla/websocket`, `google/uuid`).

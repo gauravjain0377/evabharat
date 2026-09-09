@@ -1,0 +1,19 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mediasync
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - DATABASE_PATH=/app/data/media.db
+      - STATIC_DIR=/app/public
+    volumes:
+      - mediasync_data:/app/data
+    restart: unless-stopped
+
+volumes:
+  mediasync_data:
+    driver: local
