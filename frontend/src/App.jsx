@@ -130,7 +130,7 @@ export default function App() {
           {/* Stats bar */}
           <div className="flex items-center gap-6 mb-6 pb-4 border-b border-white/[0.04]">
             <div className="flex items-center gap-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+              <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 shadow-[0_0_6px_#22d3ee]" />
               <span className="text-[11px] text-slate-400 font-mono">{windows.length} WINDOWS ACTIVE</span>
             </div>
             <div className="flex items-center gap-2">

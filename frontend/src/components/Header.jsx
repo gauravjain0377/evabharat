@@ -12,11 +12,30 @@ export function Header({ syncState, onTriggerSync, onAddMedia }) {
       style={{ background: 'rgba(6, 8, 14, 0.9)', backdropFilter: 'blur(20px)' }}
     >
       <div className="flex items-center justify-between gap-4 px-6 py-3.5">
-        {/* Brand - Crisp pure white typography, no purple box */}
-        <div className="flex items-center gap-3 shrink-0">
+        {/* Brand */}
+        <div className="flex items-center gap-2.5 shrink-0">
           <div>
-            <h1 className="text-base font-bold tracking-tight text-white flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block shadow-[0_0_8px_#34d399]" />
+            <h1 className="text-base font-bold tracking-tight text-white flex items-center gap-2.5">
+              <svg
+                width="15"
+                height="15"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className="shrink-0 drop-shadow-[0_0_8px_rgba(0,216,255,0.9)]"
+              >
+                <path
+                  d="M 12 2.5 L 21.5 12 L 12 21.5 L 2.5 12 Z"
+                  stroke="#00d8ff"
+                  strokeWidth="2.5"
+                  strokeLinejoin="miter"
+                  fill="none"
+                />
+                <path
+                  d="M 12 7.8 L 16.2 12 L 12 16.2 L 7.8 12 Z"
+                  fill="#00d8ff"
+                />
+              </svg>
               MediaSync
             </h1>
             <p className="text-[9px] text-slate-400 font-mono tracking-widest uppercase mt-0.5">
