@@ -9,8 +9,10 @@ COPY frontend/ ./
 RUN npm run build
 
 # ── Stage 2: Build Go Backend ──────────────────────────────────────────────
-FROM golang:1.23-alpine AS backend-builder
+FROM golang:alpine AS backend-builder
 WORKDIR /app/backend
+
+ENV GOTOOLCHAIN=auto
 
 # Install git/certs if needed
 RUN apk add --no-cache git ca-certificates
