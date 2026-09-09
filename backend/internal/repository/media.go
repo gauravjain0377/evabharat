@@ -123,3 +123,27 @@ func (r *MediaRepo) RemoveFromPlaylist(entryID string) error {
 	_, err := r.db.Exec(`DELETE FROM playlist_entries WHERE id = ?`, entryID)
 	return err
 }
+
+// ReorderPlaylist sets the position of each entry to its index in the supplied slice.
+// Runs inside a transaction so partial updates never happen.
+func (r *MediaRepo) ReorderPlaylist(windowID string, entryIDs []string) error {
+	tx, err := r.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	stmt, err := tx.Prepare(`UPDATE playlist_entries SET position = ? WHERE id = ? AND window_id = ?`)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	for i, id := range entryIDs {
+		if _, err := stmt.Exec(i, id, windowID); err != nil {
+			return err
+		}
+	}
+
+	return tx.Commit()
+}

@@ -20,7 +20,6 @@ func main() {
 	dsn := envOrDefault("DATABASE_PATH", "./data/media.db")
 	port := envOrDefault("PORT", "8080")
 
-	// Ensure data directory exists.
 	if err := os.MkdirAll("./data", 0o755); err != nil {
 		log.Fatal("failed to create data dir:", err)
 	}
@@ -40,7 +39,6 @@ func main() {
 
 	hub := ws.NewHub()
 
-	// SyncService calls hub.Broadcast when the sync timer expires.
 	syncSvc := service.NewSyncService(func() {
 		hub.Broadcast(model.WSEvent{Type: model.EventSyncEnd, Payload: nil})
 	})
@@ -48,25 +46,32 @@ func main() {
 	windowH := handler.NewWindowHandler(winRepo, mediaRepo, hub)
 	mediaH := handler.NewMediaHandler(mediaRepo)
 	syncH := handler.NewSyncHandler(mediaRepo, syncSvc, hub)
+	healthH := handler.NewHealthHandler()
 
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 	r.Use(corsMiddleware)
 
-	// WebSocket endpoint
+	// WebSocket — must be outside /api so it doesn't get a trailing slash redirect
 	r.Get("/ws", hub.ServeWS)
 
-	// REST API
 	r.Route("/api", func(r chi.Router) {
+		r.Get("/health", healthH.Check)
+
+		// Windows
 		r.Get("/windows", windowH.ListWindows)
+		r.Get("/windows/full", windowH.ListWindowsFull)
 		r.Get("/windows/{windowID}/playlist", windowH.GetPlaylist)
 		r.Post("/windows/{windowID}/playlist", windowH.AddToPlaylist)
-		r.Delete("/playlist/{entryID}", windowH.RemoveFromPlaylist)
+		r.Patch("/windows/{windowID}/playlist/reorder", windowH.ReorderPlaylist)
+		r.Delete("/windows/{windowID}/playlist/{entryID}", windowH.RemoveFromPlaylist)
 
+		// Media items
 		r.Get("/media", mediaH.ListMedia)
 		r.Post("/media", mediaH.CreateMedia)
 
+		// Sync
 		r.Get("/sync/state", syncH.GetState)
 		r.Post("/sync/trigger", syncH.Trigger)
 	})
@@ -88,7 +93,7 @@ func main() {
 func corsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusNoContent)
